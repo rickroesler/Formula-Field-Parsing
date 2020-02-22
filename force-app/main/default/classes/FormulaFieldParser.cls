@@ -50,6 +50,8 @@ public with sharing class FormulaFieldParser {
         if (tokens.size() == 1) {
             processFinalToken(currentObject, tokens[0]);
         } else {
+            processNextIntermediateField(currentObject, tokens[0]);
+
             String nextObject = getNextObject(currentObject, tokens.remove(0));
             recurseTokens(nextObject, tokens);
         }
@@ -70,6 +72,25 @@ public with sharing class FormulaFieldParser {
 
         if (isValidField) {
             this.formulaDependencies.add(currentObject + '.' + fieldName);
+        }
+    }
+
+    private void processNextIntermediateField(String currentObject, String token) {
+        // if not the final token, then it should be a reference
+        // if a reference it will be something like 'object__r' or 'Account'
+        //      object__r => object__c
+        //      Account => AccountId
+        String referenceField = '';
+        if (token.endsWith('__r')) {
+            referenceField = token.removeEnd('__r') + '__c';
+        } else {
+            referenceField = token + 'Id';
+        }
+
+        if (this.fieldMetadataService.isReferenceField(currentObject, referenceField)) {
+            this.formulaDependencies.add(currentObject + '.' + referenceField);
+        } else {
+            system.debug(currentObject + ':' + token + ' -- ' + referenceField + ' is not a reference field');
         }
     }
 
