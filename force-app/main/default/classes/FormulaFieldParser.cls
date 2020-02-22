@@ -6,7 +6,13 @@ public with sharing class FormulaFieldParser {
     private static final string FORMULA_WORD_REGEX = '([a-zA-Z0-9_\\.]+)';
     private static Pattern formulaWordPattern = Pattern.compile(FORMULA_WORD_REGEX);
     
-    private Set<String> formulaWords = new Set<String>();
+    private static final string PERIOD = '\\.';
+
+    // we call an api name pattern like 'sometext.somemoretext.somemoretext' a "word"
+    // each word is comprised of a list of period-delimited "token"s
+    // in this case {'sometext','somemoretext','somemoretext'}
+    private Set<List<String>> formulaWords = new Set<List<String>>();
+
     private Set<String> formulaDependencies = new Set<String>();
     private String calculatedFormula;
 
@@ -17,8 +23,8 @@ public with sharing class FormulaFieldParser {
     public Set<String> getFormulaDependencies(String objName, String calculatedFormula) {
         buildFormulaWords(calculatedFormula);
 
-        for (String word: this.formulaWords) {
-            parseFormulaWord(objName, word);
+        for (List<String> tokens: this.formulaWords) {
+            recurseTokens(objName, tokens);
         }
 
         return this.formulaDependencies;
@@ -28,40 +34,37 @@ public with sharing class FormulaFieldParser {
     private void buildFormulaWords(String calculatedFormula) {
         Matcher formulaWordMatcher = formulaWordPattern.matcher(calculatedFormula);
         while (formulaWordMatcher.find()) {
-            this.formulaWords.add(formulaWordMatcher.group(1));
+            String word = formulaWordMatcher.group(1);
+            List<String> tokens = word.split(PERIOD);
+            this.formulaWords.add(tokens);
             
             // move the start point forward .. after the end of the current group
             formulaWordMatcher.region(formulaWordMatcher.end(1),formulaWordMatcher.regionEnd());    
         }
     }
 
-    //recursive: keeps peeling away the objects until it gets to the final field
-    private void parseFormulaWord(String currentObject, String word) {
-        // if there's no '.' in the word, we're at the field level, and we're done
-        if (isFinalElement(word)) {
-            processFinalElement(currentObject, word);
+    // recursive: keeps peeling away the objects until it gets to the final field
+    // remember: the "word" is a List of tokens, each of which will represent an object reference or a field
+    private void recurseTokens(String currentObject, List<String> tokens) {
+        // if there's only one token left, then we're at the field level, and we're done
+        if (tokens.size() == 1) {
+            processFinalToken(currentObject, tokens[0]);
         } else {
-            String nextObject = getNextObject(currentObject, word);
-            String shorterWord = word.substringAfter('.');
-            
-            parseFormulaWord(nextObject, shorterWord);
+            String nextObject = getNextObject(currentObject, tokens.remove(0));
+            recurseTokens(nextObject, tokens);
         }
     }
 
-    private Boolean isFinalElement(String word) {
-        return !word.contains('.');
-    }
-
-    private void processFinalElement(String currentObject, String word) {
+    private void processFinalToken(String currentObject, String token) {
         Boolean isValidField = false;
         String fieldName;
 
-        if (this.fieldMetadataService.isReferenceField(currentObject, word)) {
-            currentObject = fieldMetadataService.getReferenceTarget(currentObject, word);
+        if (this.fieldMetadataService.isReferenceField(currentObject, token)) {
+            currentObject = fieldMetadataService.getReferenceTarget(currentObject, token);
             fieldName = 'Id';
             isValidField = true;    
-        } else if (this.fieldMetadataService.isValidField(currentObject, word)) {
-            fieldName = word;
+        } else if (this.fieldMetadataService.isValidField(currentObject, token)) {
+            fieldName = token;
             isValidField = true;
         }
 
@@ -70,9 +73,8 @@ public with sharing class FormulaFieldParser {
         }
     }
 
-    private String getNextObject(String currentObject, String word) {
+    private String getNextObject(String currentObject, String nextObject) {
 
-        String nextObject = word.split('\\.')[0];
         if (nextObject.endsWith('__r')) {
             nextObject = nextObject.removeEnd('__r') + '__c'; 
         }
