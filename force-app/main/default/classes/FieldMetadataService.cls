@@ -43,11 +43,12 @@ public with sharing class FieldMetadataService implements IFieldMetadataService 
             Map<String, SObjectField> allFields = allObjects.get(objName).getDescribe().fields.getMap();
             
             for (SObjectField f: allFields.values()) {
+                String apiName = f.getDescribe().getName();
                 if (f.getDescribe().isCalculated()) {
                     if (formulaFields.containsKey(objName)) {
-                        formulaFields.get(objName).add(f.getDescribe().getName());
+                        formulaFields.get(objName).add(apiName);
                     } else {
-                        formulaFields.put(objName, new List<String>{f.getDescribe().getName()});
+                        formulaFields.put(objName, new List<String>{apiName});
                     }
                 }
             }

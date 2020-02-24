@@ -18,6 +18,14 @@
                 </template>
             </template>
         -->
+            <template if:true={treeModel}>
+                <lightning-layout class="slds-m-around_medium">
+                    <lightning-tree 
+                        items={treeModel}
+                        header="Formula Fields"
+                    ></lightning-tree>
+                </lightning-layout>
+            </template>
         </div>
     </lightning-card>
 </template>

@@ -11,28 +11,26 @@ export default class LwcObjectSearch extends LightningElement {
     @wire(getFormulaFields, { searchKey: '$searchKey' })
     formulaFieldMap({ error, data }) {
         if (data) {
-            console.log(data);
-            Object.keys(data).forEach(objName => {data[objName].forEach(item => {console.log(objName + ' ' + item);});});
-            //this.treeModel = this.buildTreeModel(data);
-            //console.log(this.treeModel);
+            this.treeModel = this.buildTreeModel(data);
+            console.log(this.treeModel);
             
         }
     }
 
-    buildTreeModel(objectFormulaFields) {
-        console.log(objectFormulaFields);
-        Object.keys(objectFormulaFields).forEach(objName => {objectFormulaFields[objName].forEach(item => {console.log(objName + ' ' + item);});});
-
+    buildTreeModel(objFields) {
         const treeNodes = [];
-        Object.keys(objectFormulaFields).forEach(objName => {
+        
+        for (let [objName, fields] of Object.entries(objFields)) {
+            //fields.map(field => console.log(field));
             treeNodes.push({
                 label: objName,
-                items: objectFormulaFields[objName].forEach(item => ({
-                    label: item,
-                    name: item
+                items: fields.map(field => ({
+                    label: field,
+                    name: field
                 }))
             });
-        });
+        }
+
         return treeNodes;
     }
 
