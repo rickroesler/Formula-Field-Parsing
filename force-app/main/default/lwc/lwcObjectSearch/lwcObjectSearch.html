@@ -1,0 +1,23 @@
+<template>
+    <lightning-card
+        title="Object Search"
+        icon-name="custom:custom63"
+    >
+        <div class="slds-m-around_medium">
+            <lightning-input
+                type="search"
+                onchange={handleKeyChange}
+                class="slds-m-bottom_small"
+                label="Search"
+                value={searchKey}
+            ></lightning-input>
+            <!--
+            <template if:true={formulaFields.data}>
+                <template for:each={formulaFields.data} for:item="object">
+                    <p key={object.DeveloperName}>{object.DeveloperName}</p>
+                </template>
+            </template>
+        -->
+        </div>
+    </lightning-card>
+</template>

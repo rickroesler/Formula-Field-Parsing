@@ -26,6 +26,36 @@ public with sharing class FieldMetadataService implements IFieldMetadataService 
         return targetObject;
     }
 
+    @AuraEnabled(cacheable=true)
+    public static Map<String,List<String>> getFormulaFields(String searchKey) {
+        Map<String,List<String>> formulaFields = new Map<String,List<String>>();
+
+        String key = '%' + searchKey + '%';
+        List<EntityDefinition> entities = new List<EntityDefinition>([SELECT QualifiedApiName 
+                                                                     FROM EntityDefinition 
+                                                                     WHERE QualifiedApiName LIKE :key 
+                                                                     ORDER BY QualifiedApiName ASC
+                                                                     LIMIT 10]);
+
+        Map<String, Schema.SObjectType> allObjects = Schema.getGlobalDescribe();
+        for (EntityDefinition entity: entities) {
+            String objName = entity.QualifiedApiName;
+            Map<String, SObjectField> allFields = allObjects.get(objName).getDescribe().fields.getMap();
+            
+            for (SObjectField f: allFields.values()) {
+                if (f.getDescribe().isCalculated()) {
+                    if (formulaFields.containsKey(objName)) {
+                        formulaFields.get(objName).add(f.getDescribe().getName());
+                    } else {
+                        formulaFields.put(objName, new List<String>{f.getDescribe().getName()});
+                    }
+                }
+            }
+        }
+system.debug(formulaFields);
+        return formulaFields;
+    }
+
     private void updateObjectFields(String objName) {
         if (!this.objectFields.containsKey(objName)) {
             Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe().get(objName).getDescribe().fields.getMap();
