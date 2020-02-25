@@ -11,18 +11,12 @@
                 label="Search"
                 value={searchKey}
             ></lightning-input>
-            <!--
-            <template if:true={formulaFields.data}>
-                <template for:each={formulaFields.data} for:item="object">
-                    <p key={object.DeveloperName}>{object.DeveloperName}</p>
-                </template>
-            </template>
-        -->
             <template if:true={treeModel}>
                 <lightning-layout class="slds-m-around_medium">
                     <lightning-tree 
                         items={treeModel}
                         header="Formula Fields"
+                        onselect={handleOnselect}
                     ></lightning-tree>
                 </lightning-layout>
             </template>

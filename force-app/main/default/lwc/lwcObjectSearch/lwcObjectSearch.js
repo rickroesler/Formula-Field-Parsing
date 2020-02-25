@@ -19,14 +19,14 @@ export default class LwcObjectSearch extends LightningElement {
 
     buildTreeModel(objFields) {
         const treeNodes = [];
-        
+        let index=0;
         for (let [objName, fields] of Object.entries(objFields)) {
             //fields.map(field => console.log(field));
             treeNodes.push({
                 label: objName,
                 items: fields.map(field => ({
                     label: field,
-                    name: field
+                    name: index++
                 }))
             });
         }
@@ -43,5 +43,9 @@ export default class LwcObjectSearch extends LightningElement {
         this.delayTimeout = setTimeout(() => {
             this.searchKey = searchKey;
         }, DELAY);
+    }
+
+    handleOnselect(event) {
+        console.log(`selected: ${event.detail.name}`);
     }
 }
