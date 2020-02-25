@@ -27,8 +27,8 @@ public with sharing class FieldMetadataService implements IFieldMetadataService 
     }
 
     @AuraEnabled(cacheable=true)
-    public static Map<String,List<String>> getFormulaFields(String searchKey) {
-        Map<String,List<String>> formulaFields = new Map<String,List<String>>();
+    public static String getJsonFormulaFields(String searchKey) {
+        Map<String,List<FieldMetadataService.FormulaField>> formulaFields = new Map<String,List<FieldMetadataService.FormulaField>>();
 
         String key = '%' + searchKey + '%';
         List<EntityDefinition> entities = new List<EntityDefinition>([SELECT QualifiedApiName 
@@ -43,18 +43,22 @@ public with sharing class FieldMetadataService implements IFieldMetadataService 
             Map<String, SObjectField> allFields = allObjects.get(objName).getDescribe().fields.getMap();
             
             for (SObjectField f: allFields.values()) {
-                String apiName = f.getDescribe().getName();
                 if (f.getDescribe().isCalculated()) {
+                    FieldMetadataService.FormulaField formulaField = new FieldMetadataService.FormulaField();
+                    formulaField.apiName = f.getDescribe().getName();
+                    formulaField.calculatedFormula = f.getDescribe().getCalculatedFormula();
+                    formulaField.label = f.getDescribe().getLabel();
+                    formulaField.parentObject = objName;
                     if (formulaFields.containsKey(objName)) {
-                        formulaFields.get(objName).add(apiName);
+                        formulaFields.get(objName).add(formulaField);
                     } else {
-                        formulaFields.put(objName, new List<String>{apiName});
+                        formulaFields.put(objName, new List<FieldMetadataService.FormulaField>{formulaField});
                     }
                 }
             }
         }
-system.debug(formulaFields);
-        return formulaFields;
+
+        return Json.serialize(formulaFields);
     }
 
     private void updateObjectFields(String objName) {
@@ -87,4 +91,10 @@ system.debug(formulaFields);
         }
     }
 
+    class FormulaField {
+        String parentObject;
+        protected String apiName;
+        String label;
+        String calculatedFormula;
+    }
 }

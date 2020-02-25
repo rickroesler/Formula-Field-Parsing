@@ -4,5 +4,5 @@ public interface IFieldMetadataService {
     Boolean isReferenceField(String objName, String fieldName);
     String getCalculatedFormula(String objName, String formulaFieldName);
     String getReferenceTarget(String objName, String referenceFieldName);
-    Map<String,List<String>> getFormulaFields(String searchKey);
+    String getJsonFormulaFields(String searchKey);
 }
