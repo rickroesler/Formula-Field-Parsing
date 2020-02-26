@@ -8,11 +8,6 @@ public with sharing class FieldMetadataService implements IFieldMetadataService 
         return this.objectFields.get(objName).containsKey(fieldName);
     }
 
-    public String getCalculatedFormula(String objName, String formulaFieldName){
-        updateObjectFields(objName);
-        return this.objectFields.get(objName).get(formulaFieldName).getDescribe().getCalculatedFormula();
-    }
- 
     public Boolean isReferenceField(String objName, String fieldName) {
         updateObjectFieldReferences(objName);
         return this.objectFieldReferences.get(objName).containsKey(fieldName);
