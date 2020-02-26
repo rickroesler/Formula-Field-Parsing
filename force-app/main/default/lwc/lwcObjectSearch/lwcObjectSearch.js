@@ -14,8 +14,6 @@ export default class LwcObjectSearch extends LightningElement {
         if (data) {
             this.objFields = JSON.parse(data);
             this.treeModel = this.buildTreeModel(this.objFields);
-            console.log(this.objFields);
-            console.log(this.treeModel);
         }
     }
 
@@ -49,6 +47,19 @@ export default class LwcObjectSearch extends LightningElement {
     }
 
     handleOnselect(event) {
-        console.log(`selected: ${event.detail.name}`);
+        console.log(`in handleOnselect: ${event.detail.name}`);
+        if (event.detail.name) {
+            const apiName = event.detail.name;
+            const objName = apiName.split('.')[0];
+            const fieldName = apiName.split('.')[1];
+            for (const field of this.objFields[objName]) {
+                if (field.apiName == fieldName) {
+                    const selectedEvent = new CustomEvent('formula_field_selected', { detail: field});
+                    this.dispatchEvent(selectedEvent);    
+                    break;
+                }
+            }
+        }
     }
+
 }
