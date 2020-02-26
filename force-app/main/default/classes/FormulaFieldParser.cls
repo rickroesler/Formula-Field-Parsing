@@ -1,6 +1,7 @@
+// MUST inject fieldMetadataService using setFieldMetadataService() prior to calling
 public with sharing class FormulaFieldParser {
 
-    private IFieldMetadataService fieldMetadataService;
+    private static IFieldMetadataService fieldMetadataService;
     
     // searches for any pattern like 'sometext.somemoretext.somemoretext' <-- that is, any alphanumeric or underscore interspersed with '.'
     private static final string FORMULA_WORD_REGEX = '([a-zA-Z0-9_\\.]+)';
@@ -11,32 +12,36 @@ public with sharing class FormulaFieldParser {
     // we call an api name pattern like 'sometext.somemoretext.somemoretext' a "word"
     // each word is comprised of a list of period-delimited "token"s
     // in this case {'sometext','somemoretext','somemoretext'}
-    private Set<List<String>> formulaWords = new Set<List<String>>();
+    private static Set<List<String>> formulaWords = new Set<List<String>>();
 
-    private Set<String> formulaDependencies = new Set<String>();
-    private String calculatedFormula;
+    private static Set<String> formulaDependencies = new Set<String>();
 
-    public FormulaFieldParser(IFieldMetadataService fieldMetadataService) {
-        this.fieldMetadataService = fieldMetadataService;
+    //public FormulaFieldParser(IFieldMetadataService fieldMetadataService) {
+    //    this.fieldMetadataService = fieldMetadataService;
+    //}
+
+    public static void setFieldMetadataService(IFieldMetadataService service) {
+        fieldMetadataService = service;
     }
 
-    public Set<String> getFormulaDependencies(String objName, String calculatedFormula) {
+    @AuraEnabled(cacheable=true)
+    public static List<String> getFormulaDependencies(String objName, String calculatedFormula) {
         buildFormulaWords(calculatedFormula);
 
-        for (List<String> tokens: this.formulaWords) {
+        for (List<String> tokens: formulaWords) {
             recurseTokens(objName, tokens);
         }
 
-        return this.formulaDependencies;
+        return new List<String>(formulaDependencies); // compile error if you try and return Set<String>
     }
 
 
-    private void buildFormulaWords(String calculatedFormula) {
+    private static void buildFormulaWords(String calculatedFormula) {
         Matcher formulaWordMatcher = formulaWordPattern.matcher(calculatedFormula);
         while (formulaWordMatcher.find()) {
             String word = formulaWordMatcher.group(1);
             List<String> tokens = word.split(PERIOD);
-            this.formulaWords.add(tokens);
+            formulaWords.add(tokens);
             
             // move the start point forward .. after the end of the current group
             formulaWordMatcher.region(formulaWordMatcher.end(1),formulaWordMatcher.regionEnd());    
@@ -45,7 +50,7 @@ public with sharing class FormulaFieldParser {
 
     // recursive: keeps peeling away the objects until it gets to the final field
     // remember: the "word" is a List of tokens, each of which will represent an object reference or a field
-    private void recurseTokens(String currentObject, List<String> tokens) {
+    private static void recurseTokens(String currentObject, List<String> tokens) {
         // if there's only one token left, then we're at the field level, and we're done
         if (tokens.size() == 1) {
             processFinalToken(currentObject, tokens[0]);
@@ -57,25 +62,25 @@ public with sharing class FormulaFieldParser {
         }
     }
 
-    private void processFinalToken(String currentObject, String token) {
+    private static void processFinalToken(String currentObject, String token) {
         Boolean isValidField = false;
         String fieldName;
 
-        if (this.fieldMetadataService.isReferenceField(currentObject, token)) {
+        if (fieldMetadataService.isReferenceField(currentObject, token)) {
             currentObject = fieldMetadataService.getReferenceTarget(currentObject, token);
             fieldName = 'Id';
             isValidField = true;    
-        } else if (this.fieldMetadataService.isValidField(currentObject, token)) {
+        } else if (fieldMetadataService.isValidField(currentObject, token)) {
             fieldName = token;
             isValidField = true;
         }
 
         if (isValidField) {
-            this.formulaDependencies.add(currentObject + '.' + fieldName);
+            formulaDependencies.add(currentObject + '.' + fieldName);
         }
     }
 
-    private void processNextIntermediateField(String currentObject, String token) {
+    private static void processNextIntermediateField(String currentObject, String token) {
         // if not the final token, then it should be a reference
         // if a reference it will be something like 'object__r' or 'Account'
         //      object__r => object__c
@@ -87,19 +92,19 @@ public with sharing class FormulaFieldParser {
             referenceField = token + 'Id';
         }
 
-        if (this.fieldMetadataService.isReferenceField(currentObject, referenceField)) {
-            this.formulaDependencies.add(currentObject + '.' + referenceField);
+        if (fieldMetadataService.isReferenceField(currentObject, referenceField)) {
+            formulaDependencies.add(currentObject + '.' + referenceField);
         } else {
             system.debug(currentObject + ':' + token + ' -- ' + referenceField + ' is not a reference field');
         }
     }
 
-    private String getNextObject(String currentObject, String nextObject) {
+    private static String getNextObject(String currentObject, String nextObject) {
 
         if (nextObject.endsWith('__r')) {
             nextObject = nextObject.removeEnd('__r') + '__c'; 
         }
         
-        return this.fieldMetadataService.getReferenceTarget(currentObject, nextObject);
+        return fieldMetadataService.getReferenceTarget(currentObject, nextObject);
     }
 }
