@@ -26,7 +26,7 @@ export default class LwcObjectSearch extends LightningElement {
                 label: objName,
                 items: fields.map(field => ({
                     label: field.label,
-                    name: objName + '.' + field.apiName,
+                    name: objName + '.' + field.name,
                 }))
             });
         }
@@ -53,7 +53,7 @@ export default class LwcObjectSearch extends LightningElement {
             const objName = apiName.split('.')[0];
             const fieldName = apiName.split('.')[1];
             for (const field of this.objFields[objName]) {
-                if (field.apiName == fieldName) {
+                if (field.name == fieldName) {
                     const selectedEvent = new CustomEvent('formula_field_selected', { detail: field});
                     this.dispatchEvent(selectedEvent);    
                     break;

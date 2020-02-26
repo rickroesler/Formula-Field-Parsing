@@ -45,7 +45,7 @@ public with sharing class FieldMetadataService implements IFieldMetadataService 
             for (SObjectField f: allFields.values()) {
                 if (f.getDescribe().isCalculated()) {
                     FieldMetadataService.FormulaField formulaField = new FieldMetadataService.FormulaField();
-                    formulaField.apiName = f.getDescribe().getName();
+                    formulaField.name = f.getDescribe().getName();
                     formulaField.calculatedFormula = f.getDescribe().getCalculatedFormula();
                     formulaField.label = f.getDescribe().getLabel();
                     formulaField.parentObject = objName;
@@ -93,7 +93,7 @@ public with sharing class FieldMetadataService implements IFieldMetadataService 
 
     class FormulaField {
         String parentObject;
-        protected String apiName;
+        String name;
         String label;
         String calculatedFormula;
     }
