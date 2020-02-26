@@ -74,8 +74,8 @@ public with sharing class FormulaFieldParser {
     //recursive: keeps peeling away the objects until it gets to the final field
     private void parseFormulaWord(String currentObject, String word) {
         // if there's no '.' in the word, we're at the field level, and we're done
-        if (isFinalElement(word)) {
-            processFinalElement(currentObject, word);
+        if (isFinalElement(word) && isFieldName(currentObject, word)) {
+            this.formulaDependencies.add(currentObject + '.' + fieldName);
         } else {
             String nextObject = getNextObject(currentObject, word);
             updateObjectFields(nextObject);
@@ -89,24 +89,6 @@ public with sharing class FormulaFieldParser {
 
     private Boolean isFinalElement(String word) {
         return !word.contains('.');
-    }
-
-    private void processFinalElement(String currentObject, String word) {
-        Boolean isValidField = false;
-        String fieldName;
-
-        if (isReference(currentObject, word)) {
-            currentObject = this.objectFieldReferences.get(currentObject).get(word);
-            fieldName = 'Id';
-            isValidField = true;    
-        } else if (isFieldName(currentObject, word)) {
-            fieldName = word;
-            isValidField = true;
-        }
-
-        if (isValidField) {
-            this.formulaDependencies.add(currentObject + '.' + fieldName);
-        }
     }
 
     private Boolean isReference(String currentObject, String fieldName) {
