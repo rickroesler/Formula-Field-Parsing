@@ -1,10 +1,26 @@
 <template>
-    <lightning-card title="Formula Field Dependencies" icon-name="standard:logging">
-        <div class="slds-m-around_medium">
-            <p class="slds-m-vertical_medium content">{field.name}</p>
-            <c-lwc-object-search
-                onformulafieldselected={handleFormulaFieldSelected}
-            ></c-lwc-object-search>
-        </div>
-    </lightning-card>
+    <div class="slds-m-around_medium">
+            
+        <c-lwc-object-search
+            onformulafieldselected={handleFormulaFieldSelected}
+        ></c-lwc-object-search>
+    
+        <template if:true={field}>
+            <lightning-card title={field.label}>
+                <lightning-card title="Formula">
+                    {field.calculatedFormula}
+                </lightning-card>
+                <lightning-card title="Dependencies">    
+                    <template if:true={dependencies}>
+                        <template for:each={dependencies} for:item="dependency">
+                            <p key={dependency}>{dependency}</p>
+                        </template>
+                    </template>
+                    <template if:false={dependencies}>
+                        <p key={dependencies}>No Dependencies</p>
+                    </template>
+                </lightning-card>
+            </lightning-card>
+        </template>
+    </div>
 </template>

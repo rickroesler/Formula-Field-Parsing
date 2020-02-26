@@ -8,6 +8,7 @@ export default class LwcObjectSearch extends LightningElement {
     searchKey = '';
     treeModel;
     objFields;
+    displayTree = false;
 
     @wire(getJsonFormulaFields, { searchKey: '$searchKey' })
     formulaFieldMap({ error, data }) {
@@ -42,7 +43,10 @@ export default class LwcObjectSearch extends LightningElement {
         const searchKey = event.target.value;
         // eslint-disable-next-line @lwc/lwc/no-async-operation
         this.delayTimeout = setTimeout(() => {
-            this.searchKey = searchKey;
+            if (searchKey.length > 2) {
+                this.displayTree = true;
+                this.searchKey = searchKey;
+            }
         }, DELAY);
     }
 
