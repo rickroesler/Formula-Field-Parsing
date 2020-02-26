@@ -1,7 +1,8 @@
 // MUST inject fieldMetadataService using setFieldMetadataService() prior to calling
 public with sharing class FormulaFieldParser {
 
-    private static IFieldMetadataService fieldMetadataService;
+    // initialize to the default service; can override with the setFieldMetadataService() method
+    private static IFieldMetadataService fieldMetadataService = new FieldMetadataService();
     
     // searches for any pattern like 'sometext.somemoretext.somemoretext' <-- that is, any alphanumeric or underscore interspersed with '.'
     private static final string FORMULA_WORD_REGEX = '([a-zA-Z0-9_\\.]+)';
@@ -26,6 +27,9 @@ public with sharing class FormulaFieldParser {
 
     @AuraEnabled(cacheable=true)
     public static List<String> getFormulaDependencies(String objName, String calculatedFormula) {
+        system.debug('objName: ' + objName);
+        system.debug('formula: ' + calculatedFormula);
+        
         buildFormulaWords(calculatedFormula);
 
         for (List<String> tokens: formulaWords) {
