@@ -6,6 +6,11 @@
 .sfdx/
 .localdevserver/
 
+# Salesforce folders
+**/objects
+**/layouts
+**/profiles
+
 # LWC VSCode autocomplete
 **/lwc/jsconfig.json
 
