@@ -30,13 +30,16 @@ public with sharing class FormulaFieldParser {
         system.debug('objName: ' + objName);
         system.debug('formula: ' + calculatedFormula);
         
+        system.debug(calculatedFormula);
         buildFormulaWords(calculatedFormula);
 
         for (List<String> tokens: formulaWords) {
             recurseTokens(objName, tokens);
         }
 
-        return new List<String>(formulaDependencies); // compile error if you try and return Set<String>
+        List<String> dependencies = new List<String>(formulaDependencies);
+        dependencies.sort();
+        return dependencies; 
     }
 
 
@@ -56,8 +59,10 @@ public with sharing class FormulaFieldParser {
     // remember: the "word" is a List of tokens, each of which will represent an object reference or a field
     private static void recurseTokens(String currentObject, List<String> tokens) {
         // if there's only one token left, then we're at the field level, and we're done
-        if (tokens.size() == 1 && fieldMetadataService.isValidField(currentObject, tokens[0])) {
-            formulaDependencies.add(currentObject + '.' + tokens[0]);
+        if (tokens.size() == 1) {
+            if (fieldMetadataService.isValidField(currentObject, tokens[0])) {
+                formulaDependencies.add(currentObject + '.' + tokens[0]);
+            }
         } else {
             processNextIntermediateField(currentObject, tokens[0]);
 
