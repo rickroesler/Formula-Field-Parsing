@@ -56,31 +56,13 @@ public with sharing class FormulaFieldParser {
     // remember: the "word" is a List of tokens, each of which will represent an object reference or a field
     private static void recurseTokens(String currentObject, List<String> tokens) {
         // if there's only one token left, then we're at the field level, and we're done
-        if (tokens.size() == 1) {
-            processFinalToken(currentObject, tokens[0]);
+        if (tokens.size() == 1 && fieldMetadataService.isValidField(currentObject, tokens[0])) {
+            formulaDependencies.add(currentObject + '.' + tokens[0]);
         } else {
             processNextIntermediateField(currentObject, tokens[0]);
 
             String nextObject = getNextObject(currentObject, tokens.remove(0));
             recurseTokens(nextObject, tokens);
-        }
-    }
-
-    private static void processFinalToken(String currentObject, String token) {
-        Boolean isValidField = false;
-        String fieldName;
-
-        if (fieldMetadataService.isReferenceField(currentObject, token)) {
-            currentObject = fieldMetadataService.getReferenceTarget(currentObject, token);
-            fieldName = 'Id';
-            isValidField = true;    
-        } else if (fieldMetadataService.isValidField(currentObject, token)) {
-            fieldName = token;
-            isValidField = true;
-        }
-
-        if (isValidField) {
-            formulaDependencies.add(currentObject + '.' + fieldName);
         }
     }
 
