@@ -22,7 +22,6 @@ export default class LwcObjectSearch extends LightningElement {
         const treeNodes = [];
         
         for (let [objName, fields] of Object.entries(objFields)) {
-            fields.map(field => console.log(field));
             treeNodes.push({
                 label: objName,
                 items: fields.map(field => ({
