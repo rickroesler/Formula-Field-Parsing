@@ -1,95 +1,45 @@
 public with sharing class FieldMetadataService implements IFieldMetadataService {
     
-    private Map<String,Map<String, Schema.SObjectField>> objectFields = new Map<String,Map<String, Schema.SObjectField>>();
-    private Map<String,Map<String, String>> objectFieldReferences = new Map<String,Map<String,String>>();
+    public static List<String> getObjects(String searchKey) {
 
-    public Boolean isValidField(String objName, String fieldName) {
-        updateObjectFields(objName);
-        return this.objectFields.get(objName).containsKey(fieldName);
-    }
+        List<String> objects = new List<String>();
 
-    public Boolean isReferenceField(String objName, String fieldName) {
-        updateObjectFieldReferences(objName);
-        return this.objectFieldReferences.get(objName).containsKey(fieldName);
-    }
-    
-    public String getReferenceTarget(String objName, String referenceFieldName) {
-        String targetObject = '';
-        if (isReferenceField(objName, referenceFieldName)) {
-            targetObject = this.objectFieldReferences.get(objName).get(referenceFieldName);
-        }
-        return targetObject;
-    }
-
-    @AuraEnabled(cacheable=true)
-    public static String getJsonFormulaFields(String searchKey) {
-        Map<String,List<FieldMetadataService.FormulaField>> formulaFields = new Map<String,List<FieldMetadataService.FormulaField>>();
-
-        String key = '%' + searchKey + '%';
         List<EntityDefinition> entities = new List<EntityDefinition>([SELECT QualifiedApiName 
                                                                      FROM EntityDefinition 
-                                                                     WHERE QualifiedApiName LIKE :key 
+                                                                     WHERE QualifiedApiName LIKE :searchKey 
                                                                      ORDER BY QualifiedApiName ASC
                                                                      LIMIT 10]);
 
-        Map<String, Schema.SObjectType> allObjects = Schema.getGlobalDescribe();
-        for (EntityDefinition entity: entities) {
-            String objName = entity.QualifiedApiName;
-            Map<String, SObjectField> allFields = allObjects.get(objName).getDescribe().fields.getMap();
-            
-            for (SObjectField f: allFields.values()) {
-                if (f.getDescribe().isCalculated()) {
-                    FieldMetadataService.FormulaField formulaField = new FieldMetadataService.FormulaField();
-                    formulaField.name = f.getDescribe().getName();
-                    formulaField.calculatedFormula = f.getDescribe().getCalculatedFormula();
-                    formulaField.label = f.getDescribe().getLabel();
-                    formulaField.parentObject = objName;
-                    if (formulaFields.containsKey(objName)) {
-                        formulaFields.get(objName).add(formulaField);
-                    } else {
-                        formulaFields.put(objName, new List<FieldMetadataService.FormulaField>{formulaField});
-                    }
-                }
-            }
+        for (EntityDefinition e: entities) {
+            objects.add(e.QualifiedApiName);
         }
 
-        return Json.serialize(formulaFields);
+        return objects;
     }
-
-    private void updateObjectFields(String objName) {
-        if (!this.objectFields.containsKey(objName)) {
-            Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe().get(objName).getDescribe().fields.getMap();
-            this.objectFields.put(objName, fieldMap);
-        }
-    }
-
-    private void updateObjectFieldReferences(String objName) {
-        updateObjectFields(objName);
-        if (!this.objectFieldReferences.containsKey(objName)) {    
-            this.objectFieldReferences.put(objName,new Map<String,String>());
-        }
+    
+    public static Map<String, CustomFieldWrapper> getAllFields(String objName) {
         
-        List<EntityParticle> refFieldList = [SELECT Id, QualifiedApiName
-                                             FROM EntityParticle
-                                             WHERE EntityDefinition.QualifiedApiName =: objName
-                                               AND DataType = 'reference']; 
+        Map<String, CustomFieldWrapper> allFields = new Map<String, CustomFieldWrapper>();
 
-        Map<String,String> fieldReferences = objectFieldReferences.get(objName);
-
-        for(EntityParticle refField: refFieldList) {
-            String fieldName = refField.QualifiedApiName;
-            List<Schema.sObjectType> references = this.objectFields.get(objName).get(fieldName).getDescribe().getReferenceTo();
-            //NOTE: assumes that there is only a single refernce
-            fieldReferences.put(fieldName,references.get(0).getDescribe().getName());
-            // if the field is a standard Id (eg, CreatedById) then map both CreatedById and CreatedBy to User
-            fieldReferences.put(fieldName.removeEnd('Id'),references.get(0).getDescribe().getName());
+        Map<String,Schema.SObjectField> fieldMap = Schema.getGlobalDescribe().get(objName).getDescribe().fields.getMap();
+        for (Schema.SObjectField f: fieldMap.values()) {
+            CustomFieldWrapper formulaField = new CustomFieldWrapper();
+            formulaField.parentObject = objName;
+            formulaField.name = f.getDescribe().getName();
+            formulaField.label = f.getDescribe().getLabel();
+            formulaField.isCalculated = f.getDescribe().isCalculated();
+            formulaField.calculatedFormula = f.getDescribe().getCalculatedFormula();
+            formulaField.dataType = f.getDescribe().getType().name();
+            
+            List<Schema.SObjectType> referenceTargets = f.getDescribe().getReferenceTo();
+            if (formulaField.dataType == 'Reference' && referenceTargets != null) {
+                formulaField.referenceTo = referenceTargets.get(0).getDescribe().getName();
+            }
+            
+            allFields.put(formulaField.name, formulaField);
         }
+    
+        return allFields;
     }
 
-    class FormulaField {
-        String parentObject;
-        String name;
-        String label;
-        String calculatedFormula;
-    }
 }

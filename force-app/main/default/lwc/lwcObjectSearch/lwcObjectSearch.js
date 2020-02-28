@@ -1,5 +1,5 @@
 import { LightningElement, wire } from 'lwc';
-import getJsonFormulaFields from '@salesforce/apex/FieldMetadataService.getJsonFormulaFields';
+import getFormulaFields from '@salesforce/apex/FormulaFieldService.getFormulaFields';
 
 /** The delay used when debouncing event handlers before invoking Apex. */
 const DELAY = 300;
@@ -10,10 +10,12 @@ export default class LwcObjectSearch extends LightningElement {
     objFields;
     displayTree = false;
 
-    @wire(getJsonFormulaFields, { searchKey: '$searchKey' })
+    @wire(getFormulaFields, { searchKey: '$searchKey' })
     formulaFieldMap({ error, data }) {
         if (data) {
-            this.objFields = JSON.parse(data);
+            //this.objFields = JSON.parse(data);
+            console.log(data);
+            this.objFields = data;
             this.treeModel = this.buildTreeModel(this.objFields);
         }
     }

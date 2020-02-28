@@ -2,7 +2,7 @@
 public with sharing class FormulaFieldParser {
 
     // initialize to the default service; can override with the setFieldMetadataService() method
-    private static IFieldMetadataService fieldMetadataService = new FieldMetadataService();
+    //private static IFieldMetadataService fieldMetadataService = new FieldMetadataService();
     
     // searches for any pattern like 'sometext.somemoretext.somemoretext' <-- that is, any alphanumeric or underscore interspersed with '.'
     private static final string FORMULA_WORD_REGEX = '([a-zA-Z0-9_\\.]+)';
@@ -17,20 +17,12 @@ public with sharing class FormulaFieldParser {
 
     private static Set<String> formulaDependencies = new Set<String>();
 
-    //public FormulaFieldParser(IFieldMetadataService fieldMetadataService) {
-    //    this.fieldMetadataService = fieldMetadataService;
-    //}
-
-    public static void setFieldMetadataService(IFieldMetadataService service) {
-        fieldMetadataService = service;
-    }
-
     @AuraEnabled(cacheable=true)
     public static List<String> getFormulaDependencies(String objName, String calculatedFormula) {
-        system.debug('objName: ' + objName);
-        system.debug('formula: ' + calculatedFormula);
+        //system.debug('objName: ' + objName);
+        //system.debug('formula: ' + calculatedFormula);
         
-        system.debug(calculatedFormula);
+        //system.debug(calculatedFormula);
         buildFormulaWords(calculatedFormula);
 
         for (List<String> tokens: formulaWords) {
@@ -60,7 +52,7 @@ public with sharing class FormulaFieldParser {
     private static void recurseTokens(String currentObject, List<String> tokens) {
         // if there's only one token left, then we're at the field level, and we're done
         if (tokens.size() == 1) {
-            if (fieldMetadataService.isValidField(currentObject, tokens[0])) {
+            if (FormulaFieldService.isValidField(currentObject, tokens[0])) {
                 formulaDependencies.add(currentObject + '.' + tokens[0]);
             }
         } else {
@@ -83,7 +75,7 @@ public with sharing class FormulaFieldParser {
             referenceField = token + 'Id';
         }
 
-        if (fieldMetadataService.isReferenceField(currentObject, referenceField)) {
+        if (FormulaFieldService.isReferenceField(currentObject, referenceField)) {
             formulaDependencies.add(currentObject + '.' + referenceField);
         } else {
             system.debug(currentObject + ':' + token + ' -- ' + referenceField + ' is not a reference field');
@@ -96,6 +88,6 @@ public with sharing class FormulaFieldParser {
             nextObject = nextObject.removeEnd('__r') + '__c'; 
         }
         
-        return fieldMetadataService.getReferenceTarget(currentObject, nextObject);
+        return FormulaFieldService.getReferenceTarget(currentObject, nextObject);
     }
 }
