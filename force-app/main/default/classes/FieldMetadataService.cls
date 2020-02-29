@@ -2,11 +2,12 @@ public with sharing class FieldMetadataService implements IFieldMetadataService 
     
     public static List<String> getObjects(String searchKey) {
 
+        String key = '%' + searchKey + '%';
         List<String> objects = new List<String>();
 
         List<EntityDefinition> entities = new List<EntityDefinition>([SELECT QualifiedApiName 
                                                                      FROM EntityDefinition 
-                                                                     WHERE QualifiedApiName LIKE :searchKey 
+                                                                     WHERE QualifiedApiName LIKE :key 
                                                                      ORDER BY QualifiedApiName ASC
                                                                      LIMIT 10]);
 

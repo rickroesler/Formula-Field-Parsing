@@ -15,14 +15,12 @@ public with sharing class FormulaFieldParser {
     // in this case {'sometext','somemoretext','somemoretext'}
     private static Set<List<String>> formulaWords = new Set<List<String>>();
 
-    private static Set<String> formulaDependencies = new Set<String>();
+    private static Set<String> formulaDependencies;
 
     @AuraEnabled(cacheable=true)
     public static List<String> getFormulaDependencies(String objName, String calculatedFormula) {
-        //system.debug('objName: ' + objName);
-        //system.debug('formula: ' + calculatedFormula);
+        formulaDependencies = new Set<String>();
         
-        //system.debug(calculatedFormula);
         buildFormulaWords(calculatedFormula);
 
         for (List<String> tokens: formulaWords) {
@@ -31,6 +29,9 @@ public with sharing class FormulaFieldParser {
 
         List<String> dependencies = new List<String>(formulaDependencies);
         dependencies.sort();
+        for (String s: dependencies) {
+            system.debug(s);
+        }
         return dependencies; 
     }
 
