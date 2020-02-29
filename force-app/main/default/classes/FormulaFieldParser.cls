@@ -29,9 +29,6 @@ public with sharing class FormulaFieldParser {
 
         List<String> dependencies = new List<String>(formulaDependencies);
         dependencies.sort();
-        for (String s: dependencies) {
-            system.debug(s);
-        }
         return dependencies; 
     }
 
