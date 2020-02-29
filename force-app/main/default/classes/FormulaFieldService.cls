@@ -1,15 +1,25 @@
 public with sharing class FormulaFieldService {
     
-    // dependency injection via setter
-    private static IFieldMetadataService fieldMetadataService = (IFieldMetadataService) Type.forName('FieldMetadataService').newInstance();
+    // dependency injection via Custom Metadata type
+    private static final String FIELD_METADATA_SERVICE_INTERFACE = 'IFieldMetadataService';
+    private static IFieldMetadataService fieldMetadataService;
 
-    //private static Map<String,Map<String, Schema.SObjectField>> allObjectFields = new Map<String,Map<String, Schema.SObjectField>>();
     private static Map<String, Map<String, CustomFieldWrapper>> allObjectFields = new Map<String,Map<String,CustomFieldWrapper>>();
     private static Map<String,Map<String, String>> objectFieldReferences = new Map<String,Map<String,String>>();
 
-    public static void setFieldMetadataService(IFieldMetadataService service) {
-        fieldMetadataService = service;
+    static {
+        List<Class_Injection__mdt> injection = [SELECT Concrete_Class__c 
+                                                FROM Class_Injection__mdt 
+                                                WHERE Label = :FIELD_METADATA_SERVICE_INTERFACE];
+        String concreteClass = injection[0].Concrete_Class__c;                                        
+        fieldMetadataService = (IFieldMetadataService) Type.forName(concreteClass).newInstance();
     }
+
+    // use this to inject the mock metadata service for testing
+    @TestVisible
+    private static void fieldMetadataServiceOverride(IFieldMetadataService service) {
+        fieldMetadataService = service;
+    } 
 
     public static Boolean isValidField(String objName, String fieldName) {
         updateObjectFields(objName);
@@ -33,7 +43,7 @@ public with sharing class FormulaFieldService {
     public static Map<String, List<CustomFieldWrapper>> getFormulaFields(String searchKey) {
         Map<String,List<CustomFieldWrapper>> formulaFields = new Map<String,List<CustomFieldWrapper>>();
 
-        List<String> objects = fieldMetadataService.getObjects('%' + searchKey + '%');
+        List<String> objects = fieldMetadataService.getObjects(searchKey);
 
         for (String objName: objects) {
             updateObjectFields(objName);
