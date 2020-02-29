@@ -10,6 +10,7 @@ package.xml
 **/profiles
 **/objects
 **/layouts
+**/scripts
 
 # LWC Jest
 **/__tests__/**
