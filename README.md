@@ -1,6 +1,13 @@
-# Salesforce App
+# Salesforce Formula Field Dependency Analysis
 
-This guide helps Salesforce developers who are new to Visual Studio Code go from zero to a deployed app using Salesforce Extensions for VS Code and Salesforce CLI.
+This package allows you to 
+1. select (up to 10) Objects,
+2. view all the formula fields for those Objects, and
+3. for each formula field, view the formula and all the dependent fields. 
+
+In addition, I wanted to  use this project to 
+1. experiment with Dependency Injection, and
+2. start working with Lightning Web Components
 
 ## Part 1: Choosing a Development Model
 
