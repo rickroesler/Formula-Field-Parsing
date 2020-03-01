@@ -74,5 +74,58 @@ We recursively traverse the list of tokens:
 
 ## Architecture - 4 - Event Model
 
+### Object Search
+
+We reused the logic in the LWC Recipes for the Object search. The lwcObjectSearch component is wired to pass the `onchange` event handler's search key to the `FormulaFieldService.getFormulaFields()` method. Recall that this method returns a map of objects to formula fields. This map is rendered as an LWC Tree. 
+
+### Selecting a Formula Field
+
+When a formula field is selected on the Tree, the lwcObjectSearch component's `onselect` event handler dispatches a custom `formulafieldselected` event with the field (CustomFieldWrapper) as payload.
+
+The formulaFieldDisplay component listens for the `formulafieldselected` event. The component is wired to the `FormulaFieldParser.getFormulaDependencies()` method and displays the API name, formula, and dependencies for the selected field.
+
 ## Architecture - 5 - Dependency Injection
 
+Unit testing is tricky. We need dependable, reproducible formula fields. And we obviously don't want to package custom objects and fields just for testing. So we need to mock the FieldMetadataService and use the mock service for testing. 
+
+### Using Custom Metadata for Dependency Injection
+
+The [force-di](https://github.com/apex-enterprise-patterns/force-di) package makes extensive use of Custom Metadata to implement Dependency Injection. For this exercise, I implemented a very simple pattern:
+- Class_Injection__mdt holds the record that binds a concrete class to an interface, realizing the dependency injection
+- the Label field holds the name of the interface
+- the Concrete_Class__c field holds the name of the concrete class to be injected
+
+In the `FormulaFieldService` class, this is implemented as:
+```Java
+private static final String FIELD_METADATA_SERVICE_INTERFACE = 'IFieldMetadataService';
+private static IFieldMetadataService fieldMetadataService;
+
+static {
+    List<Class_Injection__mdt> injection = [SELECT Concrete_Class__c 
+                                            FROM Class_Injection__mdt 
+                                            WHERE Label = :FIELD_METADATA_SERVICE_INTERFACE];
+    String concreteClass = injection[0].Concrete_Class__c;                                        
+    fieldMetadataService = (IFieldMetadataService) Type.forName(concreteClass).newInstance();
+}
+```
+
+### Using a Setter to Inject Dependency
+The Custom Metadata binding works great. But not for testing, because you can't do DML on metadata records in a unit test. (I should examine the force-di package to see how testing is intended to be done.) 
+
+For this exercise, I just created a private @TestVisible method to inject the dependency. In the `FormulaFieldService` class:
+```Java
+// use this to inject the mock metadata service for testing
+@TestVisible
+private static void fieldMetadataServiceOverride(IFieldMetadataService service) {
+    fieldMetadataService = service;
+}
+```
+Note: normally this would be called `setFieldMetadataService`, but I wanted to emphasize that by using this, you're overriding whatever dependency has been injected via the Class_Injection__mdt record.
+
+And in the test classes:
+```Java
+@TestSetup
+static void makeData(){
+    FormulaFieldService.fieldMetadataServiceOverride(new FieldMetadataServiceMock());
+}
+```
