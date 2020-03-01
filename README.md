@@ -64,9 +64,9 @@ public static List<String> getFormulaDependencies(String objName, String calcula
 
 The parser loops through the string using this Regex matching pattern: `([a-zA-Z0-9_\\.]+)`.
 - The pattern will pick up any CustomField API names like `Object1__r.Object2__r.Field__c`.
-- The pattern will also pick up any formula functions like 'TEXT' and 'ISPICKVAL'. That's why we need the `isValidField` method (above); so that we can throw away these keyworks as we traverse the formula.
+- The pattern will also pick up any formula functions like 'TEXT' and 'ISPICKVAL'. That's why we need the `isValidField` method (above); so that we can throw away these keywords as we traverse the formula.
 
-Each matched pattern (eg, `Object1__r.Object2__r.Field__c`) we call a 'word'. We split each word on '.' to create a list of tokens that represent the word. In our example, the list of tokens would be {'Object1__r','Object2__c','Field__c'}.
+Each matched pattern (eg, `Object1__r.Object2__r.Field__c`) we call a 'word'. We split each word on '.' to create a list of tokens that represent the word. In our example, the list of tokens would be {'Object1__r','Object2__r','Field__c'}.
 
 We recursively traverse the list of tokens:
 - If there is only one token, then it's either a field or a formula keyword, and we're done.
