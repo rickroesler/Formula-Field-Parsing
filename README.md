@@ -13,7 +13,7 @@ In addition, I wanted to  use this project to
 
 There are two types of developer processes or models supported in Salesforce Extensions for VS Code and Salesforce CLI. These models are explained below. Each model offers pros and cons and is fully supported.
 
-```
+```java
 public interface IFieldMetadataService {
     List<String> getObjects(String searchKey);
     Map<String, CustomFieldWrapper> getAllFields(string objName);
