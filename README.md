@@ -20,7 +20,10 @@ In addition, I wanted to  use this project to
 
 ## Installation
 
-tbd
+1. install the unlocked package: https://login.salesforce.com/packaging/installPackage.apexp?p0=04t0a000001ahWDAAY
+2. assign the Formula_Field_Parser_Demo permission set
+3. launch the Formula Field Dependency app
+3. explore your formula fields!
 
 ## Architecture - 1 - IFieldMetadataService: Getting Object and CustomField Metadata
 
