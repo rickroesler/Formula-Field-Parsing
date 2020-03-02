@@ -12,6 +12,7 @@
     "sfdcLoginUrl": "https://login.salesforce.com",
     "sourceApiVersion": "48.0",
     "packageAliases": {
-        "Formula-Field-Dependency": "0Ho0a000000KymoCAC"
+        "Formula-Field-Dependency": "0Ho0a000000KymoCAC",
+        "Formula-Field-Dependency@1.0.0-1": "04t0a000001ahWDAAY"
     }
 }
