@@ -1,13 +1,9 @@
 @isTest
 public with sharing class FormulaFieldServiceTest {
 
-    @TestSetup
-    static void makeData(){
-        FormulaFieldService.fieldMetadataServiceOverride(new FieldMetadataServiceMock());
-    }
-
     @isTest
     public static void isValidFieldTest() {
+        FormulaFieldService.fieldMetadataServiceOverride(new FieldMetadataServiceMock());
         Boolean valid = FormulaFieldService.isValidField('Object1__c', 'text1__c');
         System.assertEquals(true, valid, 'Expected Object1__c.text1__c to be valid.');
 
@@ -17,6 +13,7 @@ public with sharing class FormulaFieldServiceTest {
 
     @isTest
     public static void isReferenceFieldTest() {
+        FormulaFieldService.fieldMetadataServiceOverride(new FieldMetadataServiceMock());
         Boolean valid = FormulaFieldService.isReferenceField('Object1__c', 'points_to_Object2__c');
         System.assertEquals(true, valid, 'Expected Object1__c.points_to_Object2__c to be valid.');
 
@@ -28,6 +25,7 @@ public with sharing class FormulaFieldServiceTest {
     public static void getReferenceTargetTest() {
         String referenceTarget;
 
+        FormulaFieldService.fieldMetadataServiceOverride(new FieldMetadataServiceMock());
         referenceTarget = FormulaFieldService.getReferenceTarget('Object1__c', 'points_to_Object2__c');
         System.assertEquals('Object2__c', referenceTarget, 'Expected Object1__c.points_to_Object2__c to point to Object2__c.');
 
@@ -45,6 +43,7 @@ public with sharing class FormulaFieldServiceTest {
     public static void getFormulaFieldsTest() {
         Map<String, List<CustomFieldWrapper>> fields;
 
+        FormulaFieldService.fieldMetadataServiceOverride(new FieldMetadataServiceMock());
         fields = FormulaFieldService.getFormulaFields('obj');
         System.assertEquals(2, fields.keySet().size(), 'Expected 2 objects with formula fields');
         System.assertEquals(true, fields.keySet().contains('Object1__c'), 'Expected Object1__c to have formula fields');

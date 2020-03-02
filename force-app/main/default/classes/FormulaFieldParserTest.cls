@@ -2,15 +2,11 @@
 @isTest
 public with sharing class FormulaFieldParserTest {
 
-    @TestSetup
-    static void makeData(){
-        FormulaFieldService.fieldMetadataServiceOverride(new FieldMetadataServiceMock());
-    }
-
     @isTest
     public static void getFormulaDependenciesTest() {
         List<String> dependencies;
 
+        FormulaFieldService.fieldMetadataServiceOverride(new FieldMetadataServiceMock());
         dependencies = FormulaFieldParser.getFormulaDependencies('Object1__c', 'points_to_Object2__r.text1__c + points_to_Object2__r.points_to_Object3__r.Account__r.Name');
         System.assertEquals(5, dependencies.size(), 'Expected exactly 5 dependent fields.');
         System.assertEquals(true, dependencies.contains('Account.Name'), 'Missing dependent field: Account.Name');
