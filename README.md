@@ -131,4 +131,4 @@ FormulaFieldService.fieldMetadataServiceOverride(new FieldMetadataServiceMock())
 ```
 
 ## Class Diagram
-![class diagram](<Formula%20Field%20Parser%20class%20diagram.png>)
+![class diagram](<Formula%20Field%20Parser%20class%20diagram.png>) 
