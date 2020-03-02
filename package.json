@@ -1,0 +1,25 @@
+{
+  "name": "formula-field-parsing",
+  "version": "1.0.0",
+  "description": "a package to find and display formula field dependencies",
+  "main": "index.js",
+  "dependencies": {
+    "jest": "^25.1.0"
+  },
+  "devDependencies": {
+    "@salesforce/sfdx-lwc-jest": "^0.7.0"
+  },
+  "scripts": {
+    "test": "sfdx-lwc-jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rickroesler/Formula-Field-Parsing.git"
+  },
+  "author": "Rick Roesler",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rickroesler/Formula-Field-Parsing/issues"
+  },
+  "homepage": "https://github.com/rickroesler/Formula-Field-Parsing#readme"
+}

@@ -1,111 +1,91 @@
+// MUST inject fieldMetadataService using setFieldMetadataService() prior to calling
 public with sharing class FormulaFieldParser {
 
+    // initialize to the default service; can override with the setFieldMetadataService() method
+    //private static IFieldMetadataService fieldMetadataService = new FieldMetadataService();
+    
     // searches for any pattern like 'sometext.somemoretext.somemoretext' <-- that is, any alphanumeric or underscore interspersed with '.'
     private static final string FORMULA_WORD_REGEX = '([a-zA-Z0-9_\\.]+)';
     private static Pattern formulaWordPattern = Pattern.compile(FORMULA_WORD_REGEX);
+    
+    private static final string PERIOD = '\\.';
 
-    private Map<String,Map<String, Schema.SObjectField>> objectFields = new Map<String,Map<String, Schema.SObjectField>>();
-    private Map<String,Map<String, String>> objectFieldReferences = new Map<String,Map<String,String>>();
-    private Set<String> formulaWords = new Set<String>();
-    private Set<String> formulaDependencies = new Set<String>();
-    private String calculatedFormula;
+    // we call an api name pattern like 'sometext.somemoretext.somemoretext' a "word"
+    // each word is comprised of a list of period-delimited "token"s
+    // in this case {'sometext','somemoretext','somemoretext'}
+    private static Set<List<String>> formulaWords = new Set<List<String>>();
 
-    public FormulaFieldParser(String objName, String formulaFieldName) {
+    private static Set<String> formulaDependencies;
+
+    @AuraEnabled(cacheable=true)
+    public static List<String> getFormulaDependencies(String objName, String calculatedFormula) {
+        formulaDependencies = new Set<String>();
         
-        updateObjectFields(objName);
-                        
-        updateObjectFieldReferences(objName);
+        buildFormulaWords(calculatedFormula);
 
-        this.calculatedFormula = this.objectFields.get(objName).get(formulaFieldName).getDescribe().getCalculatedFormula();
-        buildFormulaWords(this.calculatedFormula);
-
-        for (String word: formulaWords) {
-            parseFormulaWord(objName, word);
+        for (List<String> tokens: formulaWords) {
+            recurseTokens(objName, tokens);
         }
+
+        List<String> dependencies = new List<String>(formulaDependencies);
+        dependencies.sort();
+        return dependencies; 
     }
 
-    public String getCalculatedFormula() {
-        return this.calculatedFormula;
-    }
 
-    public Set<String> getFormulaDependencies() {
-        return this.formulaDependencies;
-    }
-
-    private void updateObjectFields(String objName) {
-        if (!this.objectFields.containsKey(objName)) {
-            Map<String, Schema.SObjectField> fieldMap = Schema.getGlobalDescribe().get(objName).getDescribe().fields.getMap();
-            this.objectFields.put(objName, fieldMap);
-        }
-    }
-
-    private void updateObjectFieldReferences(String objName) {
-        if (!this.objectFieldReferences.containsKey(objName)) {    
-            this.objectFieldReferences.put(objName,new Map<String,String>());
-        }
-        
-        List<EntityParticle> refFieldList = [SELECT Id, QualifiedApiName
-                                             FROM EntityParticle
-                                             WHERE EntityDefinition.QualifiedApiName =: objName
-                                               AND DataType = 'reference']; 
-
-        Map<String,String> fieldReferences = objectFieldReferences.get(objName);
-
-        for(EntityParticle refField: refFieldList) {
-            String fieldName = refField.QualifiedApiName;
-            List<Schema.sObjectType> references = this.objectFields.get(objName).get(fieldName).getDescribe().getReferenceTo();
-            //NOTE: assumes that there is only a single refernce
-            fieldReferences.put(fieldName,references.get(0).getDescribe().getName());
-            // if the field is a standard Id (eg, CreatedById) then map both CreatedById and CreatedBy to User
-            fieldReferences.put(fieldName.removeEnd('Id'),references.get(0).getDescribe().getName());
-        }
-    }
-
-    private void buildFormulaWords(String calculatedFormula) {
+    private static void buildFormulaWords(String calculatedFormula) {
         Matcher formulaWordMatcher = formulaWordPattern.matcher(calculatedFormula);
         while (formulaWordMatcher.find()) {
-            this.formulaWords.add(formulaWordMatcher.group(1));
+            String word = formulaWordMatcher.group(1);
+            List<String> tokens = word.split(PERIOD);
+            formulaWords.add(tokens);
             
             // move the start point forward .. after the end of the current group
             formulaWordMatcher.region(formulaWordMatcher.end(1),formulaWordMatcher.regionEnd());    
         }
     }
 
-    //recursive: keeps peeling away the objects until it gets to the final field
-    private void parseFormulaWord(String currentObject, String word) {
-        // if there's no '.' in the word, we're at the field level, and we're done
-        if (isFinalElement(word) && isFieldName(currentObject, word)) {
-            this.formulaDependencies.add(currentObject + '.' + fieldName);
+    // recursive: keeps peeling away the objects until it gets to the final field
+    // remember: the "word" is a List of tokens, each of which will represent an object reference or a field
+    private static void recurseTokens(String currentObject, List<String> tokens) {
+        // if there's only one token left, then we're at the field level, and we're done
+        if (tokens.size() == 1) {
+            if (FormulaFieldService.isValidField(currentObject, tokens[0])) {
+                formulaDependencies.add(currentObject + '.' + tokens[0]);
+            }
         } else {
-            String nextObject = getNextObject(currentObject, word);
-            updateObjectFields(nextObject);
-            updateObjectFieldReferences(nextObject);
-            
-            String shorterWord = word.substringAfter('.');
-            
-            parseFormulaWord(nextObject, shorterWord);
+            processNextIntermediateField(currentObject, tokens[0]);
+
+            String nextObject = getNextObject(currentObject, tokens.remove(0));
+            recurseTokens(nextObject, tokens);
         }
     }
 
-    private Boolean isFinalElement(String word) {
-        return !word.contains('.');
+    private static void processNextIntermediateField(String currentObject, String token) {
+        // if not the final token, then it should be a reference
+        // if a reference it will be something like 'object__r' or 'Account'
+        //      object__r => object__c
+        //      Account => AccountId
+        String referenceField = '';
+        if (token.endsWith('__r')) {
+            referenceField = token.removeEnd('__r') + '__c';
+        } else {
+            referenceField = token + 'Id';
+        }
+
+        if (FormulaFieldService.isReferenceField(currentObject, referenceField)) {
+            formulaDependencies.add(currentObject + '.' + referenceField);
+        } else {
+            system.debug(currentObject + ':' + token + ' -- ' + referenceField + ' is not a reference field');
+        }
     }
 
-    private Boolean isReference(String currentObject, String fieldName) {
-        return this.objectFieldReferences.get(currentObject).containsKey(fieldName);
-    }
+    private static String getNextObject(String currentObject, String nextObject) {
 
-    private Boolean isFieldName(String objName, String word) {
-        return objectFields.get(objName).containsKey(word);
-    }
-
-    private String getNextObject(String objName, String word) {
-
-        String nextObject = word.split('\\.')[0];
         if (nextObject.endsWith('__r')) {
             nextObject = nextObject.removeEnd('__r') + '__c'; 
         }
         
-        return this.objectFieldReferences.get(objName).get(nextObject);
+        return FormulaFieldService.getReferenceTarget(currentObject, nextObject);
     }
 }

@@ -1,0 +1,27 @@
+<template>
+    <lightning-card>
+        <h1 slot="title"><b>Object Search</b></h1>
+        <div class="slds-m-top_none">
+            <lightning-input
+                type="search"
+                onchange={handleKeyChange}
+                class="slds-m-around_medium"
+                label="Enter all or part of an Object's API name (eg, Object__c). Must be at least 3 characters. Returns a max of 10 objects."
+                value={searchKey}
+            ></lightning-input>
+        </div>
+    </lightning-card>
+    <template if:true={displayTree}>
+        <lightning-card>
+            <h1 slot="title"><b>Objects with Formula Fields</b></h1>
+            <div class="slds-m-around_medium">
+                <lightning-layout class="slds-m-around_medium">
+                    <lightning-tree 
+                        items={treeModel}
+                        onselect={handleOnselect}
+                    ></lightning-tree>
+                </lightning-layout>
+            </div>
+        </lightning-card>
+    </template>
+</template>

@@ -1,0 +1,29 @@
+<template>
+        <c-lwc-object-search
+            onformulafieldselected={handleFormulaFieldSelected}
+        ></c-lwc-object-search>
+    
+        <template if:true={field}>
+            <lightning-card>
+                <h1 slot="title"><b>Field Api: </b>{field.parentObject}.{field.name}</h1>
+                <lightning-card>
+                    <h1 slot="title"><b>Formula: </b>{field.calculatedFormula}</h1>
+                </lightning-card>
+                <lightning-card>
+                    <h1 slot="title"><b>Dependencies</b></h1>    
+                    <div class="slds-m-left_x-large slds-m-vertical_none">
+                        <template if:true={dependencies}>
+                            <template for:each={dependencies} for:item="dependency">
+                                <lightning-card key={dependency}>
+                                    <h2 slot="title">{dependency}</h2>
+                                </lightning-card>
+                            </template>
+                        </template>
+                    </div>
+                    <template if:false={dependencies}>
+                        <p key={dependencies}>No Dependencies</p>
+                    </template>
+                </lightning-card>
+            </lightning-card>
+        </template>
+</template>
