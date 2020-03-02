@@ -127,10 +127,7 @@ Note: normally this would be called `setFieldMetadataService`, but I wanted to e
 
 And in the test classes:
 ```Java
-@TestSetup
-static void makeData(){
-    FormulaFieldService.fieldMetadataServiceOverride(new FieldMetadataServiceMock());
-}
+FormulaFieldService.fieldMetadataServiceOverride(new FieldMetadataServiceMock());
 ```
 
 ## Class Diagram
