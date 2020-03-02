@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Concrete_Class__c</fullName>
     <externalId>false</externalId>
-    <fieldManageability>Upgradable</fieldManageability>
+    <fieldManageability>SubscriberControlled</fieldManageability>
     <label>Concrete Class</label>
     <length>50</length>
     <required>true</required>
