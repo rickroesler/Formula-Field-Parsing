@@ -11,6 +11,7 @@ package.xml
 **/objects
 **/layouts
 **/scripts
+**/appMenus
 
 # LWC Jest
 **/__tests__/**

@@ -11,6 +11,7 @@
 **/layouts
 **/profiles
 **/scripts
+**/appMenus
 
 # LWC VSCode autocomplete
 **/lwc/jsconfig.json
