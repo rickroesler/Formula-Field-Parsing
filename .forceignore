@@ -8,7 +8,6 @@ package.xml
 **/jsconfig.json
 **/.eslintrc.json
 **/profiles
-**/objects
 **/layouts
 **/scripts
 **/appMenus

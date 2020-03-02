@@ -7,7 +7,6 @@
 .localdevserver/
 
 # Salesforce folders
-**/objects
 **/layouts
 **/profiles
 **/scripts
