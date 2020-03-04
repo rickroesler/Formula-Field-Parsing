@@ -32,7 +32,7 @@ public with sharing class FormulaFieldParser {
         return dependencies; 
     }
 
-
+    @TestVisible
     private static void buildFormulaWords(String calculatedFormula) {
         Matcher formulaWordMatcher = formulaWordPattern.matcher(calculatedFormula);
         while (formulaWordMatcher.find()) {
@@ -47,6 +47,7 @@ public with sharing class FormulaFieldParser {
 
     // recursive: keeps peeling away the objects until it gets to the final field
     // remember: the "word" is a List of tokens, each of which will represent an object reference or a field
+    @TestVisible
     private static void recurseTokens(String currentObject, List<String> tokens) {
         // if there's only one token left, then we're at the field level, and we're done
         if (tokens.size() == 1) {
@@ -61,6 +62,7 @@ public with sharing class FormulaFieldParser {
         }
     }
 
+    @TestVisible
     private static void processNextIntermediateField(String currentObject, String token) {
         // if not the final token, then it should be a reference
         // if a reference it will be something like 'object__r' or 'Account'
@@ -80,6 +82,7 @@ public with sharing class FormulaFieldParser {
         }
     }
 
+    @TestVisible
     private static String getNextObject(String currentObject, String nextObject) {
 
         if (nextObject.endsWith('__r')) {
