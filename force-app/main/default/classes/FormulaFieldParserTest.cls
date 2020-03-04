@@ -3,6 +3,16 @@
 public with sharing class FormulaFieldParserTest {
 
     @isTest
+    public static void buildFormulaWordsTest() {
+        Set<List<String>> actual;
+        actual = new Set<List<String>>{New List<String>{'Object1__r','Object2__r','Field__c'}};
+        System.assertEquals(true,actual.equals(FormulaFieldParser.buildFormulaWords('Object1__r.Object2__r.Field__c')),'Incorrect Set of formulaWords.');
+
+        actual = new Set<List<String>>{New List<String>{'$CustomMetadata','CustomType__mdt','MetadataRecord','Field__c'}};
+        System.assertEquals(true,actual.equals(FormulaFieldParser.buildFormulaWords('$CustomMetadata.CustomType__mdt.MetadataRecord.Field__c')),'Did not match initial "$".');
+    }
+
+    @isTest
     public static void getFormulaDependenciesTest() {
         List<String> dependencies;
 

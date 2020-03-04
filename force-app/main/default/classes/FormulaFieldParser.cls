@@ -5,7 +5,7 @@ public with sharing class FormulaFieldParser {
     //private static IFieldMetadataService fieldMetadataService = new FieldMetadataService();
     
     // searches for any pattern like 'sometext.somemoretext.somemoretext' <-- that is, any alphanumeric or underscore interspersed with '.'
-    private static final string FORMULA_WORD_REGEX = '([a-zA-Z0-9_\\.]+)';
+    private static final string FORMULA_WORD_REGEX = '([$a-zA-Z0-9_\\.]+)';
     private static Pattern formulaWordPattern = Pattern.compile(FORMULA_WORD_REGEX);
     
     private static final string PERIOD = '\\.';
@@ -21,7 +21,7 @@ public with sharing class FormulaFieldParser {
     public static List<String> getFormulaDependencies(String objName, String calculatedFormula) {
         formulaDependencies = new Set<String>();
         
-        buildFormulaWords(calculatedFormula);
+        formulaWords = buildFormulaWords(calculatedFormula);
 
         for (List<String> tokens: formulaWords) {
             recurseTokens(objName, tokens);
@@ -33,7 +33,8 @@ public with sharing class FormulaFieldParser {
     }
 
     @TestVisible
-    private static void buildFormulaWords(String calculatedFormula) {
+    private static Set<List<String>> buildFormulaWords(String calculatedFormula) {
+        Set<List<String>> formulaWords = new Set<List<String>>();
         Matcher formulaWordMatcher = formulaWordPattern.matcher(calculatedFormula);
         while (formulaWordMatcher.find()) {
             String word = formulaWordMatcher.group(1);
@@ -43,6 +44,7 @@ public with sharing class FormulaFieldParser {
             // move the start point forward .. after the end of the current group
             formulaWordMatcher.region(formulaWordMatcher.end(1),formulaWordMatcher.regionEnd());    
         }
+        return formulaWords;
     }
 
     // recursive: keeps peeling away the objects until it gets to the final field
