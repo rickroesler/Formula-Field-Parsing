@@ -15,16 +15,22 @@ public with sharing class FormulaFieldParser {
     // in this case {'sometext','somemoretext','somemoretext'}
     private static Set<List<String>> formulaWords = new Set<List<String>>();
 
-    private static Set<String> formulaDependencies;
+    @TestVisible
+    private static Set<String> formulaDependencies = new Set<String>();
 
     @AuraEnabled(cacheable=true)
     public static List<String> getFormulaDependencies(String objName, String calculatedFormula) {
+        // because it's static, ensure that the dependencies get reset to an empty set
         formulaDependencies = new Set<String>();
         
         formulaWords = buildFormulaWords(calculatedFormula);
 
         for (List<String> tokens: formulaWords) {
-            recurseTokens(objName, tokens);
+            if (tokens[0].startsWith('$')) {
+                processPlatformKeyword(tokens);
+            } else {                
+                recurseTokens(objName, tokens);
+            }
         }
 
         List<String> dependencies = new List<String>(formulaDependencies);
@@ -47,10 +53,35 @@ public with sharing class FormulaFieldParser {
         return formulaWords;
     }
 
+    @TestVisible
+    private static void processPlatformKeyword(List<String> tokens) {
+        switch on tokens[0] {
+            when '$CustomMetadata' {
+                formulaDependencies.add(tokens[1].removeEnd('__mdt') + '.' + tokens[2]);
+                formulaDependencies.add(tokens[1] + '.' + tokens[3]);
+            }
+            when '$Label' {
+                formulaDependencies.add(tokens[1]);
+            }
+            when '$Setup' {
+                formulaDependencies.add(tokens[1] + '.' + tokens[2]);
+            }
+            when '$Permission' {
+                formulaDependencies.add(tokens[1]);
+            }
+            when '$User' {
+                formulaDependencies.add('User.' + tokens[1]);
+            }
+            when else {
+                
+            }
+        }
+    }
+
     // recursive: keeps peeling away the objects until it gets to the final field
     // remember: the "word" is a List of tokens, each of which will represent an object reference or a field
     @TestVisible
-    private static void recurseTokens(String currentObject, List<String> tokens) {
+    private static void recurseTokens(String currentObject, List<String> tokens) {                        
         // if there's only one token left, then we're at the field level, and we're done
         if (tokens.size() == 1) {
             if (FormulaFieldService.isValidField(currentObject, tokens[0])) {
@@ -93,4 +124,5 @@ public with sharing class FormulaFieldParser {
         
         return FormulaFieldService.getReferenceTarget(currentObject, nextObject);
     }
+
 }
