@@ -10,7 +10,10 @@
     "@salesforce/sfdx-lwc-jest": "^0.7.0"
   },
   "scripts": {
-    "test": "sfdx-lwc-jest"
+    "test": "sfdx-lwc-jest",
+    "test:unit": "lwc-jest",
+    "test:unit:watch": "lwc-jest --watch",
+    "test:unit:coverage": "lwc-jest --coverage"
   },
   "repository": {
     "type": "git",
