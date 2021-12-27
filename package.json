@@ -4,13 +4,7 @@
   "description": "a package to find and display formula field dependencies",
   "main": "index.js",
   "dependencies": {
-    "jest": "^25.1.0"
-  },
-  "devDependencies": {
-    "@salesforce/sfdx-lwc-jest": "^0.7.0"
-  },
-  "scripts": {
-    "test": "sfdx-lwc-jest"
+    "tree-model": "^1.0.7"
   },
   "repository": {
     "type": "git",
